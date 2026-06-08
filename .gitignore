@@ -1,0 +1,30 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Environment / secrets
+.env
+
+# Database
+*.db
+
+# Generated audio episodes
+audio/*
+!audio/.gitkeep
+
+# Kokoro TTS model files (large — download separately, see README)
+*.onnx
+*.bin
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
