@@ -14,13 +14,6 @@ class Article(BaseModel):
     source: str
 
 
-class Summary(BaseModel):
-    title: str
-    summary: str
-    source: str
-    url: str
-
-
 class Episode(BaseModel):
     id: int
     date: datetime.date

@@ -52,6 +52,16 @@ async def mark_seen(urls: List[str]) -> None:
         await db.commit()
 
 
+async def prune_seen(days: int) -> int:
+    async with aiosqlite.connect(settings.db_path) as db:
+        cursor = await db.execute(
+            "DELETE FROM seen_articles WHERE seen_at < datetime('now', ?)",
+            (f"-{days} days",),
+        )
+        await db.commit()
+        return cursor.rowcount
+
+
 async def save_episode(
     d: date,
     title: str,
@@ -76,6 +86,16 @@ async def get_all_episodes() -> List[Episode]:
         ) as cursor:
             rows = await cursor.fetchall()
             return [Episode(**dict(row)) for row in rows]
+
+
+async def get_episode(episode_id: int) -> Optional[Episode]:
+    async with aiosqlite.connect(settings.db_path) as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute(
+            "SELECT * FROM episodes WHERE id = ?", (episode_id,)
+        ) as cursor:
+            row = await cursor.fetchone()
+            return Episode(**dict(row)) if row else None
 
 
 async def episode_exists_for_date(d: date) -> bool:

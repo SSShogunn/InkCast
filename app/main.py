@@ -51,6 +51,14 @@ async def list_episodes():
     return await database.get_all_episodes()
 
 
+@app.get("/episodes/{episode_id}")
+async def get_episode(episode_id: int):
+    episode = await database.get_episode(episode_id)
+    if not episode:
+        raise HTTPException(status_code=404, detail="Episode not found")
+    return episode
+
+
 @app.post("/trigger")
 async def trigger_pipeline():
     return await worker.run_pipeline()

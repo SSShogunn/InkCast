@@ -46,7 +46,7 @@ async def run_pipeline(today: Optional[date] = None) -> Dict[str, Any]:
         logger.error(f"TTS failed: {exc}")
         return {"status": "failed", "reason": f"TTS error: {exc}"}
 
-    duration = int((len(script.split()) / 150) * 60)
+    duration = tts.audio_duration_seconds(actual_audio)
     title = f"Inkcast — {today.strftime('%B')} {today.day}, {today.year}"
 
     try:
@@ -58,6 +58,7 @@ async def run_pipeline(today: Optional[date] = None) -> Dict[str, Any]:
             script=script,
         )
         await database.mark_seen([a.url for a in capped])
+        await database.prune_seen(settings.seen_retention_days)
         logger.info(f"Episode {episode_id} saved for {today}")
     except Exception as exc:
         logger.error(f"Failed to save episode: {exc}")

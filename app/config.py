@@ -16,11 +16,11 @@ class Settings(BaseSettings):
     lm_studio_model: str = "mock-model"
     openai_api_key: str = "lm-studio"
 
-    # TTS: "mock" | "gtts" | "openai" | "kokoro"
-    tts_provider: str = "mock"
-
     # Scheduler
     schedule_hour: int = 6
+
+    # Drop dedup records older than this many days
+    seen_retention_days: int = 30
 
     # Storage
     audio_dir: str = "audio"

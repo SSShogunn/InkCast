@@ -72,6 +72,7 @@ curl -X POST http://localhost:8000/trigger
 | `GET /feed.xml` | Podcast RSS feed — **subscribe to this URL** in any podcast app |
 | `GET /audio/{filename}` | The audio file for an episode |
 | `GET /episodes` | JSON list of all generated episodes |
+| `GET /episodes/{id}` | A single episode with its full transcript |
 | `POST /trigger` | Manually run the pipeline now |
 
 ## Configuration
@@ -84,7 +85,7 @@ All settings live in `.env` (see [`.env.example`](.env.example) for the full lis
 | `MAX_ARTICLES_PER_FEED` | `5` | Cap per feed |
 | `MAX_ARTICLES_TOTAL` | `20` | Hard cap before the LLM call |
 | `SCHEDULE_HOUR` | `6` | Daily run time (24h) |
-| `TTS_PROVIDER` | `mock` | `mock` \| `gtts` \| `openai` \| `kokoro` |
+| `SEEN_RETENTION_DAYS` | `30` | Drop dedup records older than this |
 | `KOKORO_VOICE` | `af_heart` | e.g. `am_adam`, `bf_emma`, `bm_george` |
 
 ## Deployment
