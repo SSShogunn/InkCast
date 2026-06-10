@@ -5,8 +5,9 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from . import database, deduplicator, fetcher, scripter, tts
-from .config import settings
+from . import deduplicator, fetcher, scripter, tts
+from ..core import database
+from ..config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,9 @@ async def run_pipeline(today: Optional[date] = None) -> Dict[str, Any]:
     capped = new_articles[:settings.max_articles_total]
     if len(new_articles) > len(capped):
         logger.info(f"Capped articles from {len(new_articles)} to {len(capped)}")
-    script = await scripter.write_script(capped, today)
+
+    prior_threads = await database.get_recent_threads(settings.memory_window_days)
+    script = await scripter.write_script(capped, today, prior_threads)
     if not script:
         logger.info("No script produced (LLM unreachable) — skipping episode")
         return {"status": "skipped", "reason": "LLM unreachable"}
@@ -64,10 +67,16 @@ async def run_pipeline(today: Optional[date] = None) -> Dict[str, Any]:
         logger.error(f"Failed to save episode: {exc}")
         return {"status": "failed", "reason": f"database error: {exc}"}
 
+    # Cross-episode memory: distil this episode into storylines for tomorrow.
+    threads = await scripter.extract_threads(script)
+    await database.save_threads(episode_id, today, threads)
+
     return {
         "status": "ok",
         "date": today.isoformat(),
         "episode_id": episode_id,
         "articles_processed": len(capped),
         "duration_seconds": duration,
+        "threads_extracted": len(threads),
+        "threads_recalled": len(prior_threads),
     }

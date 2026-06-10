@@ -4,8 +4,8 @@ import logging
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from . import worker
-from .config import settings
+from ..pipeline import worker
+from ..config import settings
 
 logger = logging.getLogger(__name__)
 

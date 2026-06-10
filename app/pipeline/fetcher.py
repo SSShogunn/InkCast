@@ -9,8 +9,9 @@ from typing import Any, Dict, List, Optional, cast
 import feedparser
 from bs4 import BeautifulSoup
 
-from .config import settings
-from .models import Article
+from ..core import database
+from ..config import settings
+from ..models import Article
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +77,10 @@ async def _fetch_one(feed_url: str) -> List[Article]:
 
 
 async def fetch_articles() -> List[Article]:
+    feed_urls = await database.get_feed_urls()
+    if not feed_urls:
+        feed_urls = settings.feed_urls
     results = await asyncio.gather(
-        *(_fetch_one(url) for url in settings.feed_urls)
+        *(_fetch_one(url) for url in feed_urls)
     )
     return [article for batch in results for article in batch]

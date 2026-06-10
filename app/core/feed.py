@@ -7,7 +7,7 @@ from pathlib import Path
 from feedgen.feed import FeedGenerator
 
 from . import database
-from .config import settings
+from ..config import settings
 
 logger = logging.getLogger(__name__)
 

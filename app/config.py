@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     # Drop dedup records older than this many days
     seen_retention_days: int = 30
 
+    # Cross-episode memory: how many days of story threads to recall as
+    # context when writing a new episode
+    memory_window_days: int = 14
+
     # Storage
     audio_dir: str = "audio"
     db_path: str = "inkcast.db"

@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
-from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, Response
+from fastapi import FastAPI
 
-from . import database, feed, worker
-from . import scheduler as sched
+from .api.routes import router
 from .config import settings
+from .core import database
+from .core import scheduler as sched
 
 logging.basicConfig(
     level=logging.INFO,
@@ -29,36 +28,4 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Inkcast", lifespan=lifespan)
-
-
-@app.get("/feed.xml")
-async def get_feed():
-    xml = await feed.generate_feed()
-    return Response(content=xml, media_type="application/rss+xml")
-
-
-@app.get("/audio/{filename}")
-async def get_audio(filename: str):
-    path = Path(settings.audio_dir) / filename
-    if not path.exists() or not path.is_file():
-        raise HTTPException(status_code=404, detail="Audio file not found")
-    mime = "audio/wav" if filename.endswith(".wav") else "audio/mpeg"
-    return FileResponse(str(path), media_type=mime)
-
-
-@app.get("/episodes")
-async def list_episodes():
-    return await database.get_all_episodes()
-
-
-@app.get("/episodes/{episode_id}")
-async def get_episode(episode_id: int):
-    episode = await database.get_episode(episode_id)
-    if not episode:
-        raise HTTPException(status_code=404, detail="Episode not found")
-    return episode
-
-
-@app.post("/trigger")
-async def trigger_pipeline():
-    return await worker.run_pipeline()
+app.include_router(router)

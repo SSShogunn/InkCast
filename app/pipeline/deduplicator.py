@@ -3,8 +3,8 @@ from __future__ import annotations
 import logging
 from typing import List
 
-from . import database
-from .models import Article
+from ..core import database
+from ..models import Article
 
 logger = logging.getLogger(__name__)
 
