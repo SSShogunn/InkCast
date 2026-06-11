@@ -14,8 +14,8 @@ from ..models import Article, StoryThread
 logger = logging.getLogger(__name__)
 
 client = AsyncOpenAI(
-    base_url=settings.lm_studio_base_url,
-    api_key=settings.openai_api_key,
+    base_url=settings.llm_base_url,
+    api_key=settings.llm_api_key,
 )
 
 _PROMPT = """\
@@ -104,7 +104,7 @@ async def write_script(
     for attempt in range(2):
         try:
             response = await client.chat.completions.create(
-                model=settings.lm_studio_model,
+                model=settings.llm_model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
                 max_tokens=2000,
@@ -151,7 +151,7 @@ async def extract_threads(script: str) -> List[Dict[str, str]]:
     Never raises — memory is best-effort and must not fail the pipeline."""
     try:
         response = await client.chat.completions.create(
-            model=settings.lm_studio_model,
+            model=settings.llm_model,
             messages=[{"role": "user", "content": _EXTRACT_PROMPT.format(script=script)}],
             temperature=0.2,
             max_tokens=600,

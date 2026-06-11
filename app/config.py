@@ -11,10 +11,18 @@ _ENV_FILE = Path(__file__).parent.parent / ".env"
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=str(_ENV_FILE), env_file_encoding="utf-8")
 
-    # LLM (LM Studio via OpenAI-compatible API)
+    # --- LLM provider: "lmstudio" (local) or "openai" (hosted) ---
+    llm_provider: str = "lmstudio"
+
+    # LM Studio (local, OpenAI-compatible API)
     lm_studio_base_url: str = "http://localhost:1234/v1"
     lm_studio_model: str = "mock-model"
-    openai_api_key: str = "lm-studio"
+    lm_studio_api_key: str = "lm-studio"  # ignored by LM Studio, but the SDK needs one
+
+    # OpenAI (hosted). Used when llm_provider == "openai".
+    openai_base_url: str = "https://api.openai.com/v1"
+    openai_model: str = "gpt-4o-mini"
+    openai_api_key: str = ""
 
     # Scheduler
     schedule_hour: int = 6
@@ -46,6 +54,25 @@ class Settings(BaseSettings):
 
     # RSS source URLs — JSON array in .env
     feed_urls: List[str] = []
+
+    # --- Resolved LLM settings (provider-agnostic) -------------------------
+    # The pipeline reads these three; they fan out to the right provider.
+
+    @property
+    def _use_openai(self) -> bool:
+        return self.llm_provider.strip().lower() == "openai"
+
+    @property
+    def llm_base_url(self) -> str:
+        return self.openai_base_url if self._use_openai else self.lm_studio_base_url
+
+    @property
+    def llm_api_key(self) -> str:
+        return self.openai_api_key if self._use_openai else self.lm_studio_api_key
+
+    @property
+    def llm_model(self) -> str:
+        return self.openai_model if self._use_openai else self.lm_studio_model
 
 
 settings = Settings()

@@ -62,9 +62,9 @@ app/
 
 ## Requirements
 
-- **Python 3.14+**
+- **Python 3.14+** (or **Docker** — see [Run with Docker](#run-with-docker))
 - **[uv](https://docs.astral.sh/uv/)** for dependency management
-- **[LM Studio](https://lmstudio.ai/)** running locally with a model loaded and its server started (default `http://localhost:1234`)
+- An LLM endpoint — either **[LM Studio](https://lmstudio.ai/)** running locally (default `http://localhost:1234`) **or** an **OpenAI API key**. See [Choosing an LLM provider](#choosing-an-llm-provider).
 
 ## Setup
 
@@ -99,6 +99,47 @@ The scheduler will generate an episode automatically each day at `SCHEDULE_HOUR`
 curl -X POST http://localhost:8000/trigger
 ```
 
+## Run with Docker
+
+The recommended way to run Inkcast on a server. The image stays small — the
+~350 MB Kokoro model files and all generated data live on mounted volumes, not
+inside the image.
+
+```bash
+# 1. Configure
+cp .env.example .env       # edit to taste
+
+# 2. Put the two Kokoro model files in ./inkcast/ (mounted read-only at /models)
+#    kokoro-v1.0.onnx and voices-v1.0.bin  (see the curl commands in Setup)
+
+# 3. Build and start
+docker compose up -d --build
+```
+
+Audio and the SQLite DB persist in the `inkcast-data` named volume across
+restarts and rebuilds. Subscribe your podcast app to
+`http://<your-server>:8000/feed.xml`.
+
+**Reaching LM Studio:** LM Studio runs on the *host*, not in the container, so
+the compose file points the container at `http://host.docker.internal:1234/v1`
+(with `host-gateway` wired up for Linux). Start LM Studio's server on the host
+and you're set. If you'd rather use OpenAI, set `LLM_PROVIDER=openai` in `.env`
+and the host networking is simply ignored.
+
+## Choosing an LLM provider
+
+Inkcast talks to any OpenAI-compatible endpoint. Flip between local and hosted
+with one variable:
+
+| `LLM_PROVIDER` | Uses | Key variables |
+|----------------|------|---------------|
+| `lmstudio` (default) | Local LM Studio — free, private | `LM_STUDIO_BASE_URL`, `LM_STUDIO_MODEL` |
+| `openai` | Hosted OpenAI | `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_BASE_URL` |
+
+Because both go through the same OpenAI-compatible client, `OPENAI_BASE_URL`
+also lets you point `openai` mode at any compatible gateway (OpenRouter, a
+proxy, another self-hosted server, etc.).
+
 ## API
 
 | Endpoint | Description |
@@ -119,6 +160,7 @@ All settings live in `.env` (see [`.env.example`](.env.example) for the full lis
 
 | Variable | Default | Notes |
 |----------|---------|-------|
+| `LLM_PROVIDER` | `lmstudio` | `lmstudio` or `openai` — see [Choosing an LLM provider](#choosing-an-llm-provider) |
 | `FEED_URLS` | (6 tech feeds) | JSON array, **single line** — seeds the feeds table on first run; manage live feeds via `/api/feeds` |
 | `MAX_ARTICLES_PER_FEED` | `5` | Cap per feed |
 | `MAX_ARTICLES_TOTAL` | `20` | Hard cap before the LLM call |
@@ -129,7 +171,10 @@ All settings live in `.env` (see [`.env.example`](.env.example) for the full lis
 
 ## Deployment
 
-Inkcast is designed to run as a long-lived service on a home server. Run it with `uvicorn` (see [Run](#run) above), then subscribe your podcast app to `http://<your-server>:8000/feed.xml`.
+Inkcast is designed to run as a long-lived service on a home server. The
+simplest path is [Docker Compose](#run-with-docker); alternatively run it
+directly with `uvicorn` (see [Run](#run) above). Either way, subscribe your
+podcast app to `http://<your-server>:8000/feed.xml`.
 
 ## License
 

@@ -1,0 +1,43 @@
+services:
+  inkcast:
+    build: .
+    image: inkcast:latest
+    container_name: inkcast
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+
+    # Your .env supplies feeds, schedule, LLM provider/keys, etc.
+    env_file:
+      - .env
+
+    # These override anything in .env so volumes always line up, regardless
+    # of the paths in your local .env file.
+    environment:
+      AUDIO_DIR: /data/audio
+      DB_PATH: /data/inkcast.db
+      KOKORO_MODEL: /models/kokoro-v1.0.onnx
+      KOKORO_VOICES: /models/voices-v1.0.bin
+      # Reach LM Studio running on the host machine (not inside the container).
+      # Harmless when LLM_PROVIDER=openai.
+      LM_STUDIO_BASE_URL: http://host.docker.internal:1234/v1
+
+    volumes:
+      # The two Kokoro files (kokoro-v1.0.onnx, voices-v1.0.bin) live here.
+      - ./inkcast:/models:ro
+      # Generated audio + SQLite DB — persisted across restarts/rebuilds.
+      - inkcast-data:/data
+
+    # Lets http://host.docker.internal resolve to the host on Linux servers.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/episodes', timeout=5)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  inkcast-data:

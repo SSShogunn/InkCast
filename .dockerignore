@@ -1,0 +1,20 @@
+# VCS / tooling
+.git
+.gitignore
+.claude
+.cache
+
+# Python
+.venv
+**/__pycache__
+*.pyc
+
+# Secrets & local data (provided via volumes / env at runtime)
+.env
+inkcast.db
+audio/
+
+# Kokoro model files — mounted as a volume, never baked into the image
+inkcast/
+*.onnx
+*.bin

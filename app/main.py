@@ -21,7 +21,10 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     await database.init_db()
     logger.info(f"Feeds configured: {settings.feed_urls}")
-    logger.info(f"LLM: {settings.lm_studio_base_url} model={settings.lm_studio_model}")
+    logger.info(
+        f"LLM: provider={settings.llm_provider} "
+        f"url={settings.llm_base_url} model={settings.llm_model}"
+    )
     sched.start()
     yield
     sched.stop()
